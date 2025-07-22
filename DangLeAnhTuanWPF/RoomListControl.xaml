@@ -1,0 +1,19 @@
+<UserControl x:Class="DangLeAnhTuanWPF.RoomListControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             Height="Auto" Width="Auto">
+    <Grid>
+        <TextBlock Text="Room List" FontWeight="Bold" FontSize="16" Margin="0,10,0,10"/>
+        <DataGrid x:Name="dgRooms" AutoGenerateColumns="False" Height="350" Margin="0,40,0,0" CanUserAddRows="False">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="ID" Binding="{Binding RoomId}" IsReadOnly="True"/>
+                <DataGridTextColumn Header="Number" Binding="{Binding RoomNumber}" />
+                <DataGridTextColumn Header="Description" Binding="{Binding RoomDetailDescription}" />
+                <DataGridTextColumn Header="Max Capacity" Binding="{Binding RoomMaxCapacity}" />
+                <DataGridTextColumn Header="Room Type" Binding="{Binding RoomType.RoomTypeName}" />
+                <DataGridTextColumn Header="Status" Binding="{Binding RoomStatus}" />
+                <DataGridTextColumn Header="Price/Day" Binding="{Binding RoomPricePerDay}" />
+            </DataGrid.Columns>
+        </DataGrid>
+    </Grid>
+</UserControl> 

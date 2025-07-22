@@ -1,0 +1,79 @@
+<Window x:Class="DangLeAnhTuanWPF.CustomerWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Customer Dashboard" Height="500" Width="800">
+    <Grid>
+        <TabControl>
+            <TabItem Header="Room List">
+                <StackPanel>
+                    <TextBlock Text="Room List" FontWeight="Bold" FontSize="16" Margin="0,10,0,10"/>
+                    <DataGrid x:Name="dgRooms" AutoGenerateColumns="False" Height="350" CanUserAddRows="False">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="ID" Binding="{Binding RoomId}" IsReadOnly="True"/>
+                            <DataGridTextColumn Header="Number" Binding="{Binding RoomNumber}" />
+                            <DataGridTextColumn Header="Description" Binding="{Binding RoomDetailDescription}" />
+                            <DataGridTextColumn Header="Max Capacity" Binding="{Binding RoomMaxCapacity}" />
+                            <DataGridTextColumn Header="Room Type" Binding="{Binding RoomType.RoomTypeName}" />
+                            <DataGridTextColumn Header="Status" Binding="{Binding RoomStatus}" />
+                            <DataGridTextColumn Header="Price/Day" Binding="{Binding RoomPricePerDay}" />
+                            <DataGridTemplateColumn Header="">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Button Content="Booking" Click="BookingRoom_Click" />
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </StackPanel>
+            </TabItem>
+            <TabItem Header="Booking History">
+                <StackPanel>
+                    <TextBlock Text="Booking History" FontWeight="Bold" FontSize="16" Margin="0,10,0,10"/>
+                    <DataGrid x:Name="dgBookingHistory" AutoGenerateColumns="False" Height="350" CanUserAddRows="False">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="ID" Binding="{Binding BookingReservationId}" IsReadOnly="True"/>
+                            <DataGridTextColumn Header="Booking Date" Binding="{Binding BookingDate}" />
+                            <DataGridTextColumn Header="Total Price" Binding="{Binding TotalPrice}" />
+                            <DataGridTextColumn Header="Status" Binding="{Binding BookingStatus}" />
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </StackPanel>
+            </TabItem>
+            <TabItem Header="Profile">
+                <StackPanel>
+                    <TextBlock Text="Profile" FontWeight="Bold" FontSize="16" Margin="0,10,0,10"/>
+                    <!-- Thông tin cá nhân sẽ hiển thị ở đây -->
+                </StackPanel>
+            </TabItem>
+            <TabItem Header="Cart">
+                <StackPanel>
+                    <TextBlock Text="Cart" FontWeight="Bold" FontSize="16" Margin="0,10,0,10"/>
+                    <DataGrid x:Name="dgCart" AutoGenerateColumns="False" Height="200" CanUserAddRows="False">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Room" Binding="{Binding Room.RoomNumber}" />
+                            <DataGridTextColumn Header="Start Date" Binding="{Binding StartDate}" />
+                            <DataGridTextColumn Header="End Date" Binding="{Binding EndDate}" />
+                            <DataGridTextColumn Header="Actual Price" Binding="{Binding ActualPrice}" />
+                            <DataGridTemplateColumn Header="">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <!--<Button Content="Update" Click="UpdateCart_Click" /> -->
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            <DataGridTemplateColumn Header="">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <!--<Button Content="Delete" Click="DeleteCart_Click" />-->
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                    <Button Content="Confirm" Margin="0,20,0,0" Height="30" Width="120" HorizontalAlignment="Right" Click="ConfirmBooking_Click"/>
+                </StackPanel>
+            </TabItem>
+        </TabControl>
+    </Grid>
+</Window> 

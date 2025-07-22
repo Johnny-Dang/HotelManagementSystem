@@ -1,0 +1,33 @@
+# Build results
+bin/
+obj/
+
+# VS files
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Others
+.vscode/
+*.log
+*.tmp
+
+# Git ignore for NuGet packages
+*.nupkg
+packages/
+
+# Ignore Visual Studio related folders
+.vs/
+*.user
+*.suo
+*.cache
+*.db
+*.db-shm
+*.db-wal
+*.vsidx
+*.vscode/
+*.DesignTimeBuild
+*.ProjectEvaluation
+*.CodeChunks.*
+*.json        # nếu là file cấu hình layout cá nhân
