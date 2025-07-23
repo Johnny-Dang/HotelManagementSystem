@@ -1,17 +1,16 @@
 using DAL.Entities;
 using System.Collections.Generic;
 
-namespace DAL.Repository
+namespace DAL.Repositories
 {
     public interface ICustomerRepository
     {
         IEnumerable<Customer> GetAll();
-        Customer GetById(int id);
         Customer GetByEmail(string email);
-        Customer GetByEmailAndPassword(string email, string password);
+        Customer GetByEmailAndPassword(string email, string password); // Added for login
         void Add(Customer customer);
         void Update(Customer customer);
-        void Delete(int id);
-        IEnumerable<Customer> Search(string keyword);
+        void Delete(int customerId);
+        bool IsEmailTaken(string email, int? existingCustomerId = null);
     }
-} 
+}

@@ -1,16 +1,14 @@
 ﻿using DAL.Entities;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace BLL.Services
 {
     public interface IBookingService
     {
-        IEnumerable<BookingReservation> GetAllBookingsWithDetails();
-
+        List<BookingReservation> GetBookingHistory(int customerId);
         void SaveBooking(BookingReservation reservation, List<BookingDetail> details);
+        List<BookingReservation> GetAllBookingsWithDetails();
+        List<(string RoomNumber, int TotalBookings, decimal TotalRevenue)> GenerateBookingReport(DateOnly startDate, DateOnly endDate);
     }
 }

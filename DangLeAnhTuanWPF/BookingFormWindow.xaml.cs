@@ -8,25 +8,40 @@ namespace DangLeAnhTuanWPF
     {
         public DateOnly StartDate { get; set; }
         public DateOnly EndDate { get; set; }
-        public RoomInformation Room { get; }
+        public RoomInformation Room { get; private set; }
 
-        public BookingFormWindow(RoomInformation room, DateOnly? startDate = null, DateOnly? endDate = null)
+        public BookingFormWindow()
         {
             InitializeComponent();
-            Room = room;
             DataContext = this;
+        }
 
+        public void Initialize(RoomInformation room, DateOnly? startDate = null, DateOnly? endDate = null)
+        {
+            if (room == null)
+            {
+                MessageBox.Show("Room data is missing!", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                Close();
+                return;
+            }
+
+            Room = room;
             StartDate = startDate ?? DateOnly.FromDateTime(DateTime.Now);
             EndDate = endDate ?? DateOnly.FromDateTime(DateTime.Now.AddDays(1));
+            StartDatePicker.SelectedDate = StartDate.ToDateTime(TimeOnly.MinValue);
+            EndDatePicker.SelectedDate = EndDate.ToDateTime(TimeOnly.MinValue);
         }
 
         private void Book_Click(object sender, RoutedEventArgs e)
         {
-            if (StartDate == default || EndDate == default)
+            if (!StartDatePicker.SelectedDate.HasValue || !EndDatePicker.SelectedDate.HasValue)
             {
                 MessageBox.Show("Please select both start and end dates.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                 return;
             }
+
+            StartDate = DateOnly.FromDateTime(StartDatePicker.SelectedDate.Value);
+            EndDate = DateOnly.FromDateTime(EndDatePicker.SelectedDate.Value);
 
             if (StartDate >= EndDate)
             {

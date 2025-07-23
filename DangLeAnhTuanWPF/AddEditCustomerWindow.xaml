@@ -40,4 +40,4 @@
             <Button Content="Cancel" Width="80" Margin="5" Click="Cancel_Click"/>
         </StackPanel>
     </Grid>
-</Window> 
+</Window>

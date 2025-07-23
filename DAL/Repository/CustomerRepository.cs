@@ -1,8 +1,9 @@
 using DAL.Entities;
+using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace DAL.Repository
+namespace DAL.Repositories
 {
     public class CustomerRepository : ICustomerRepository
     {
@@ -13,14 +14,22 @@ namespace DAL.Repository
             _context = context;
         }
 
-        public IEnumerable<Customer> GetAll() => _context.Customers.ToList();
+        public IEnumerable<Customer> GetAll()
+        {
+            return _context.Customers.ToList();
+        }
 
-        public Customer GetById(int id) => _context.Customers.Find(id);
+        public Customer GetByEmail(string email)
+        {
+            return _context.Customers
+                .FirstOrDefault(c => c.EmailAddress == email);
+        }
 
-        public Customer GetByEmail(string email) => _context.Customers.FirstOrDefault(c => c.EmailAddress == email);
-
-        public Customer GetByEmailAndPassword(string email, string password) =>
-            _context.Customers.FirstOrDefault(c => c.EmailAddress == email && c.Password == password && c.CustomerStatus == 1);
+        public Customer GetByEmailAndPassword(string email, string password)
+        {
+            return _context.Customers
+                .FirstOrDefault(c => c.EmailAddress == email && c.Password == password);
+        }
 
         public void Add(Customer customer)
         {
@@ -30,18 +39,13 @@ namespace DAL.Repository
 
         public void Update(Customer customer)
         {
-            var tracked = _context.Customers.Local.FirstOrDefault(c => c.CustomerId == customer.CustomerId);
-            if (tracked != null)
-            {
-                _context.Entry(tracked).State = Microsoft.EntityFrameworkCore.EntityState.Detached;
-            }
             _context.Customers.Update(customer);
             _context.SaveChanges();
         }
 
-        public void Delete(int id)
+        public void Delete(int customerId)
         {
-            var customer = _context.Customers.Find(id);
+            var customer = _context.Customers.Find(customerId);
             if (customer != null)
             {
                 _context.Customers.Remove(customer);
@@ -49,11 +53,10 @@ namespace DAL.Repository
             }
         }
 
-        public IEnumerable<Customer> Search(string keyword)
+        public bool IsEmailTaken(string email, int? existingCustomerId = null)
         {
-            return _context.Customers
-                .Where(c => c.CustomerFullName.Contains(keyword) || c.EmailAddress.Contains(keyword))
-                .ToList();
+            var customer = GetByEmail(email);
+            return customer != null && (existingCustomerId == null || customer.CustomerId != existingCustomerId);
         }
     }
-} 
+}

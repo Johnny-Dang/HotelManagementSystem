@@ -1,29 +1,47 @@
+using BLL.Services;
 using DAL.Entities;
+using Microsoft.Extensions.DependencyInjection;
+using System;
+using System.Collections.ObjectModel;
+using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
-using System.Collections.ObjectModel;
-using BLL.Services;
-using System;
-using System.Linq;
 
 namespace DangLeAnhTuanWPF
 {
     public partial class CustomerWindow : Window
     {
-        private readonly Customer _customer;
+        private Customer _customer;
         private readonly IRoomService _roomService;
         private readonly IBookingService _bookingService;
+        private readonly ICustomerService _customerService;
+        private readonly IServiceProvider _serviceProvider;
         private readonly ObservableCollection<BookingDetail> _cart = new ObservableCollection<BookingDetail>();
         private BookingReservation _currentReservation = null;
 
-        public CustomerWindow(Customer customer, IRoomService roomService, IBookingService bookingService)
+        public CustomerWindow(IRoomService roomService, IBookingService bookingService, ICustomerService customerService, IServiceProvider serviceProvider)
         {
             InitializeComponent();
-            _customer = customer;
             _roomService = roomService;
             _bookingService = bookingService;
-            LoadRooms();
+            _customerService = customerService;
+            _serviceProvider = serviceProvider;
             dgCart.ItemsSource = _cart;
+        }
+
+        public void Initialize(Customer customer)
+        {
+            if (customer == null)
+            {
+                MessageBox.Show("Customer data is missing!", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                Close();
+                return;
+            }
+
+            _customer = customer;
+            LoadRooms();
+            LoadBookingHistory();
+            LoadProfile();
         }
 
         private void LoadRooms()
@@ -32,15 +50,30 @@ namespace DangLeAnhTuanWPF
             dgRooms.ItemsSource = new ObservableCollection<RoomInformation>(rooms);
         }
 
+        private void LoadBookingHistory()
+        {
+            var history = _bookingService.GetBookingHistory(_customer.CustomerId);
+            dgBookingHistory.ItemsSource = new ObservableCollection<BookingReservation>(history);
+        }
+
+        private void LoadProfile()
+        {
+            txtFullName.Text = _customer.CustomerFullName ?? string.Empty;
+            txtEmail.Text = _customer.EmailAddress ?? string.Empty;
+            txtTelephone.Text = _customer.Telephone ?? string.Empty;
+            dpBirthday.SelectedDate = _customer.CustomerBirthday?.ToDateTime(TimeOnly.MinValue);
+            txtPassword.Clear(); // Password is not loaded for security
+        }
+
         private void BookingRoom_Click(object sender, RoutedEventArgs e)
         {
             var room = (sender as FrameworkElement)?.DataContext as RoomInformation;
             if (room == null) return;
 
-            var bookingForm = new BookingFormWindow(room);
+            var bookingForm = _serviceProvider.GetService<BookingFormWindow>();
+            bookingForm.Initialize(room);
             if (bookingForm.ShowDialog() == true)
             {
-                // If no reservation exists, create a new one
                 if (_currentReservation == null)
                 {
                     _currentReservation = new BookingReservation
@@ -54,11 +87,9 @@ namespace DangLeAnhTuanWPF
                     };
                 }
 
-                // Calculate number of days for ActualPrice
                 int days = (bookingForm.EndDate.ToDateTime(TimeOnly.MinValue) -
                            bookingForm.StartDate.ToDateTime(TimeOnly.MinValue)).Days;
 
-                // Create BookingDetail
                 var detail = new BookingDetail
                 {
                     RoomId = room.RoomId,
@@ -68,7 +99,6 @@ namespace DangLeAnhTuanWPF
                     ActualPrice = room.RoomPricePerDay * days
                 };
 
-                // Add to cart and update reservation
                 _cart.Add(detail);
                 _currentReservation.TotalPrice += detail.ActualPrice ?? 0;
                 _currentReservation.BookingDetails.Add(detail);
@@ -89,6 +119,8 @@ namespace DangLeAnhTuanWPF
                 MessageBox.Show("Booking successful!", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
                 _cart.Clear();
                 _currentReservation = null;
+                LoadBookingHistory();
+                LoadRooms();
             }
             catch (Exception ex)
             {
@@ -101,22 +133,19 @@ namespace DangLeAnhTuanWPF
             var detail = (sender as FrameworkElement)?.DataContext as BookingDetail;
             if (detail == null) return;
 
-            var room = detail.Room;
-            var bookingForm = new BookingFormWindow(room, detail.StartDate, detail.EndDate);
+            var bookingForm = _serviceProvider.GetService<BookingFormWindow>();
+            bookingForm.Initialize(detail.Room, detail.StartDate, detail.EndDate);
             if (bookingForm.ShowDialog() == true)
             {
-                // Calculate number of days
                 int days = (bookingForm.EndDate.ToDateTime(TimeOnly.MinValue) -
                            bookingForm.StartDate.ToDateTime(TimeOnly.MinValue)).Days;
 
-                // Update the existing BookingDetail
                 _currentReservation.TotalPrice -= detail.ActualPrice ?? 0;
                 detail.StartDate = bookingForm.StartDate;
                 detail.EndDate = bookingForm.EndDate;
-                detail.ActualPrice = room.RoomPricePerDay * days;
+                detail.ActualPrice = detail.Room.RoomPricePerDay * days;
                 _currentReservation.TotalPrice += detail.ActualPrice ?? 0;
 
-                // Refresh the cart display
                 dgCart.Items.Refresh();
             }
         }
@@ -126,19 +155,50 @@ namespace DangLeAnhTuanWPF
             var detail = (sender as FrameworkElement)?.DataContext as BookingDetail;
             if (detail == null) return;
 
-            // Remove from cart and update TotalPrice
-            _cart.Remove(detail);
-            _currentReservation.BookingDetails.Remove(detail);
-            _currentReservation.TotalPrice -= detail.ActualPrice ?? 0;
-
-            // If cart is empty, reset reservation
-            if (!_cart.Any())
+            if (MessageBox.Show("Are you sure you want to delete this item?", "Confirm Delete", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
             {
-                _currentReservation = null;
+                _cart.Remove(detail);
+                _currentReservation.BookingDetails.Remove(detail);
+                _currentReservation.TotalPrice -= detail.ActualPrice ?? 0;
+
+                if (!_cart.Any())
+                {
+                    _currentReservation = null;
+                }
+
+                dgCart.Items.Refresh();
+            }
+        }
+
+        private void UpdateProfile_Click(object sender, RoutedEventArgs e)
+        {
+            if (string.IsNullOrEmpty(txtFullName.Text) || string.IsNullOrEmpty(txtEmail.Text) || string.IsNullOrEmpty(txtTelephone.Text))
+            {
+                MessageBox.Show("Please fill in all required fields.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
             }
 
-            // Refresh the cart display
-            dgCart.Items.Refresh();
+            var customer = new Customer
+            {
+                CustomerId = _customer.CustomerId,
+                CustomerFullName = txtFullName.Text,
+                EmailAddress = txtEmail.Text,
+                Telephone = txtTelephone.Text,
+                CustomerBirthday = dpBirthday.SelectedDate.HasValue ? DateOnly.FromDateTime(dpBirthday.SelectedDate.Value) : null,
+                Password = string.IsNullOrEmpty(txtPassword.Password) ? _customer.Password : txtPassword.Password,
+                CustomerStatus = _customer.CustomerStatus
+            };
+
+            try
+            {
+                _customerService.Update(customer);
+                _customer = customer;
+                MessageBox.Show("Profile updated successfully!", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
     }
 }

@@ -1,9 +1,9 @@
 using DAL.Entities;
+using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
 using System.Linq;
-using Microsoft.EntityFrameworkCore;
 
-namespace DAL.Repository
+namespace DAL.Repositories
 {
     public class RoomRepository : IRoomRepository
     {
@@ -14,14 +14,34 @@ namespace DAL.Repository
             _context = context;
         }
 
-        public IEnumerable<RoomInformation> GetAllWithRoomType()
+        public IEnumerable<RoomInformation> GetAll()
         {
-            return _context.RoomInformations.Include(r => r.RoomType).ToList();
+            return _context.RoomInformations
+                .Include(r => r.RoomType)
+                .ToList();
         }
 
-        public RoomInformation GetById(int id)
+        public IEnumerable<RoomInformation> GetAllWithRoomType()
         {
-            return _context.RoomInformations.Include(r => r.RoomType).FirstOrDefault(r => r.RoomId == id);
+            return _context.RoomInformations
+                .Include(r => r.RoomType)
+                .ToList();
+        }
+
+        public RoomInformation GetById(int roomId)
+        {
+            return _context.RoomInformations
+                .Include(r => r.RoomType)
+                .FirstOrDefault(r => r.RoomId == roomId);
+        }
+
+        public IEnumerable<RoomInformation> Search(string keyword)
+        {
+            return _context.RoomInformations
+                .Include(r => r.RoomType)
+                .Where(r => r.RoomNumber.Contains(keyword, StringComparison.OrdinalIgnoreCase) ||
+                            r.RoomDetailDescription.Contains(keyword, StringComparison.OrdinalIgnoreCase))
+                .ToList();
         }
 
         public void Add(RoomInformation room)
@@ -36,9 +56,9 @@ namespace DAL.Repository
             _context.SaveChanges();
         }
 
-        public void Delete(int id)
+        public void Delete(int roomId)
         {
-            var room = _context.RoomInformations.Find(id);
+            var room = _context.RoomInformations.Find(roomId);
             if (room != null)
             {
                 _context.RoomInformations.Remove(room);
@@ -46,19 +66,9 @@ namespace DAL.Repository
             }
         }
 
-        public IEnumerable<RoomInformation> Search(string keyword)
+        public IEnumerable<RoomType> GetRoomTypes()
         {
-            return _context.RoomInformations
-                .Include(r => r.RoomType)
-                .Where(r => r.RoomNumber.Contains(keyword) || r.RoomDetailDescription.Contains(keyword))
-                .ToList();
-        }
-
-        public IEnumerable<RoomInformation> GetAllRooms()
-        {
-            return _context.RoomInformations
-                .Include(r => r.RoomType)
-                .ToList();
+            return _context.RoomTypes.ToList();
         }
     }
-} 
+}

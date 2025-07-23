@@ -1,10 +1,6 @@
 ﻿using DAL.Entities;
-using DAL.Repository;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using DAL.Repositories;
+using Microsoft.Extensions.Configuration;
 
 namespace BLL.Services
 {
@@ -14,11 +10,11 @@ namespace BLL.Services
         private readonly string _adminEmail;
         private readonly string _adminPassword;
 
-        public AuthService(ICustomerRepository customerRepository, string adminEmail, string adminPassword)
+        public AuthService(ICustomerRepository customerRepository, IConfiguration configuration)
         {
             _customerRepository = customerRepository;
-            _adminEmail = adminEmail;
-            _adminPassword = adminPassword;
+            _adminEmail = configuration["Admin:Email"];
+            _adminPassword = configuration["Admin:Password"];
         }
 
         public string Login(string email, string password, out Customer customer)

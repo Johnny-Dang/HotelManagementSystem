@@ -1,17 +1,17 @@
 using DAL.Entities;
 using System.Collections.Generic;
 
-namespace DAL.Repository
+namespace DAL.Repositories
 {
     public interface IRoomRepository
     {
+        IEnumerable<RoomInformation> GetAll();
         IEnumerable<RoomInformation> GetAllWithRoomType();
-        RoomInformation GetById(int id);
+        RoomInformation GetById(int roomId);
+        IEnumerable<RoomInformation> Search(string keyword);
         void Add(RoomInformation room);
         void Update(RoomInformation room);
-        void Delete(int id);
-        IEnumerable<RoomInformation> Search(string keyword);
-
-        IEnumerable<RoomInformation> GetAllRooms();
+        void Delete(int roomId);
+        IEnumerable<RoomType> GetRoomTypes();
     }
-} 
+}

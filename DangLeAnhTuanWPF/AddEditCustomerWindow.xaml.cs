@@ -1,39 +1,40 @@
+using BLL.Services;
 using DAL.Entities;
 using System;
-using System.Windows;
 using System.Net.Mail;
+using System.Windows;
 
 namespace DangLeAnhTuanWPF
 {
     public partial class AddEditCustomerWindow : Window
     {
         public Customer Customer { get; private set; }
+        private readonly ICustomerService _customerService;
 
-        public AddEditCustomerWindow(Customer customer = null)
+        public AddEditCustomerWindow(ICustomerService customerService)
         {
             InitializeComponent();
-            if (customer != null)
+            _customerService = customerService;
+        }
+
+        public void Initialize(Customer customer)
+        {
+            Customer = new Customer
             {
-                // Luôn giữ CustomerId trong object Customer để phục vụ update
-                Customer = new Customer
-                {
-                    CustomerId = customer.CustomerId,
-                    CustomerFullName = customer.CustomerFullName,
-                    Telephone = customer.Telephone,
-                    EmailAddress = customer.EmailAddress,
-                    CustomerBirthday = customer.CustomerBirthday,
-                    CustomerStatus = customer.CustomerStatus,
-                    Password = customer.Password
-                };
-                txtFullName.Text = customer.CustomerFullName;
-                txtTelephone.Text = customer.Telephone;
-                txtEmail.Text = customer.EmailAddress;
-                dpBirthday.SelectedDate = customer.CustomerBirthday.HasValue
-                    ? customer.CustomerBirthday.Value.ToDateTime(TimeOnly.MinValue)
-                    : null;
-                txtStatus.Text = customer.CustomerStatus?.ToString() ?? "1";
-                txtPassword.Password = customer.Password;
-            }
+                CustomerId = customer.CustomerId,
+                CustomerFullName = customer.CustomerFullName,
+                Telephone = customer.Telephone,
+                EmailAddress = customer.EmailAddress,
+                CustomerBirthday = customer.CustomerBirthday,
+                CustomerStatus = customer.CustomerStatus,
+                Password = customer.Password
+            };
+            txtFullName.Text = customer.CustomerFullName;
+            txtTelephone.Text = customer.Telephone;
+            txtEmail.Text = customer.EmailAddress;
+            dpBirthday.SelectedDate = customer.CustomerBirthday?.ToDateTime(TimeOnly.MinValue);
+            txtStatus.Text = customer.CustomerStatus?.ToString() ?? "1";
+            txtPassword.Password = customer.Password;
         }
 
         private bool IsValidEmail(string email)
@@ -62,28 +63,20 @@ namespace DangLeAnhTuanWPF
                 return;
             }
 
-            // 1. Validate email format
             if (!IsValidEmail(txtEmail.Text.Trim()))
             {
                 MessageBox.Show("Email không đúng định dạng!", "Thông báo", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
-            // 2. Kiểm tra trùng email trong database
-            var context = new DAL.Entities.FuminiHotelManagementContext();
-            var repo = new DAL.Repository.CustomerRepository(context);
-            var existed = repo.GetByEmail(txtEmail.Text.Trim());
-            if (existed != null && (Customer == null || existed.CustomerId != Customer.CustomerId))
+            if (_customerService.IsEmailTaken(txtEmail.Text.Trim(), Customer?.CustomerId))
             {
                 MessageBox.Show("Email đã bị trùng!", "Thông báo", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
             if (Customer == null)
-                Customer = new DAL.Entities.Customer();
-
-            // Luôn giữ CustomerId nếu có
-            // (nếu là edit thì CustomerId đã có, nếu là add thì CustomerId sẽ được sinh tự động)
+                Customer = new Customer();
 
             Customer.CustomerFullName = txtFullName.Text.Trim();
             Customer.Telephone = txtTelephone.Text.Trim();
@@ -95,11 +88,13 @@ namespace DangLeAnhTuanWPF
             Customer.Password = txtPassword.Password;
 
             DialogResult = true;
+            Close();
         }
 
         private void Cancel_Click(object sender, RoutedEventArgs e)
         {
             DialogResult = false;
+            Close();
         }
     }
-} 
+}

@@ -1,9 +1,10 @@
 using DAL.Entities;
 using Microsoft.EntityFrameworkCore;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace DAL.Repository
+namespace DAL.Repositories
 {
     public class BookingRepository : IBookingRepository
     {
@@ -14,100 +15,43 @@ namespace DAL.Repository
             _context = context;
         }
 
-        public IEnumerable<BookingReservation> GetAllWithDetails()
+        public IEnumerable<BookingReservation> GetByCustomerId(int customerId)
         {
             return _context.BookingReservations
-                .Include(b => b.Customer)
-                .Include(b => b.BookingDetails)
-                    .ThenInclude(d => d.Room)
+                .Include(br => br.BookingDetails)
+                .ThenInclude(bd => bd.Room)
+                .ThenInclude(r => r.RoomType)
+                .Where(br => br.CustomerId == customerId)
                 .ToList();
         }
 
-        public BookingReservation AddAndReturn(BookingReservation reservation)
+        public void Add(BookingReservation reservation, List<BookingDetail> details)
         {
-            _context.BookingReservations.Add(reservation);
-            _context.SaveChanges();
-            return reservation;
-        }
-
-        public void Update(BookingReservation reservation)
-        {
-            _context.BookingReservations.Update(reservation);
-            _context.SaveChanges();
-        }
-
-        public void AddDetail(BookingDetail detail)
-        {
-            _context.BookingDetails.Add(detail);
-            _context.SaveChanges();
-        }
-
-        public void UpdateDetail(BookingDetail detail)
-        {
-            _context.BookingDetails.Update(detail);
-            _context.SaveChanges();
-        }
-
-        public void DeleteDetail(BookingDetail detail)
-        {
-            _context.BookingDetails.Remove(detail);
-            _context.SaveChanges();
-
-            var remainingDetails = _context.BookingDetails.Count(d => d.BookingReservationId == detail.BookingReservationId);
-            if (remainingDetails == 0)
+            // Tự sinh BookingReservationId nếu database không tự động tăng
+            int maxId = 1;
+            if (_context.BookingReservations.Any())
             {
-                var reservation = _context.BookingReservations.Find(detail.BookingReservationId);
-                if (reservation != null)
-                {
-                    _context.BookingReservations.Remove(reservation);
-                    _context.SaveChanges();
-                }
+                maxId = _context.BookingReservations.Max(b => b.BookingReservationId) + 1;
             }
-        }
-
-        public void SaveBooking(BookingReservation reservation, IEnumerable<BookingDetail> details)
-        {
-            using (var transaction = _context.Database.BeginTransaction())
+            reservation.BookingReservationId = maxId;
+            // Gán BookingReservationId cho từng BookingDetail
+            foreach (var detail in details)
             {
-                try
-                {
-                    //reservation.BookingReservationId = _context.BookingReservations.Max(d => d.BookingReservationId);
-                    var obj = _context.BookingReservations.Add(reservation);
-                    _context.SaveChanges();
-
-                    foreach (var detail in details)
-                    {
-                        detail.BookingReservationId = reservation.BookingReservationId;
-                        _context.BookingDetails.Add(detail);
-                    }
-                    _context.SaveChanges();
-
-                    transaction.Commit();
-                }
-                catch
-                {
-                    transaction.Rollback();
-                    throw;
-                }
+                detail.BookingReservationId = reservation.BookingReservationId;
             }
-        }
-        public int GetNextBookingReservationId()
-        {
-            return _context.BookingReservations.Any()
-                ? _context.BookingReservations.Max(x => x.BookingReservationId) + 1
-                : 1;
-        }
-
-        public void AddBookingReservation(BookingReservation reservation)
-        {
+            reservation.BookingDetails = details;
             _context.BookingReservations.Add(reservation);
             _context.SaveChanges();
         }
 
-        public void AddBookingDetails(List<BookingDetail> details)
+        public IEnumerable<BookingReservation> GetAllWithDetails()
         {
-            _context.BookingDetails.AddRange(details);
-            _context.SaveChanges();
+            return _context.BookingReservations
+                .Include(br => br.Customer)
+                .Include(br => br.BookingDetails)
+                .ThenInclude(bd => bd.Room)
+                .ThenInclude(r => r.RoomType)
+                .ToList();
         }
     }
-} 
+}

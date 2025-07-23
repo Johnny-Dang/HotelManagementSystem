@@ -1,26 +1,21 @@
 ﻿using BLL.Services;
 using DAL.Entities;
-using DAL.Repository;
-using DangLeAnhTuanWPF.Helpers;
+using Microsoft.Extensions.DependencyInjection;
+using System;
 using System.Windows;
 
 namespace DangLeAnhTuanWPF
 {
-    /// <summary>
-    /// Interaction logic for LoginWindow.xaml
-    /// </summary>
     public partial class LoginWindow : Window
     {
         private readonly IAuthService _authService;
+        private readonly IServiceProvider _serviceProvider;
 
-        public LoginWindow()
+        public LoginWindow(IAuthService authService, IServiceProvider serviceProvider)
         {
             InitializeComponent();
-            _authService = new AuthService(
-                new CustomerRepository(new FuminiHotelManagementContext()),
-                AppConfig.AdminEmail,
-                AppConfig.AdminPassword
-            );
+            _authService = authService;
+            _serviceProvider = serviceProvider;
         }
 
         private void Login_Click(object sender, RoutedEventArgs e)
@@ -39,14 +34,15 @@ namespace DangLeAnhTuanWPF
             if (result == "Admin")
             {
                 MessageBox.Show("Đăng nhập Admin thành công!");
-                var adminWindow = new AdminWindow();
+                var adminWindow = _serviceProvider.GetService<AdminWindow>();
                 adminWindow.Show();
                 this.Close();
             }
             else if (result == "Customer")
             {
                 MessageBox.Show("Đăng nhập Customer thành công!");
-                var customerWindow = new CustomerWindow(customer);
+                var customerWindow = _serviceProvider.GetService<CustomerWindow>();
+                customerWindow.Initialize(customer);
                 customerWindow.Show();
                 this.Close();
             }

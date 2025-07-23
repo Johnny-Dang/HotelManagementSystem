@@ -6,10 +6,14 @@ namespace DangLeAnhTuanWPF
 {
     public partial class BookingDetailWindow : Window
     {
-        public BookingDetailWindow(IEnumerable<BookingDetail> details)
+        public BookingDetailWindow()
         {
             InitializeComponent();
-            dgBookingDetails.ItemsSource = details;
+        }
+
+        public void Initialize(IEnumerable<BookingDetail> bookingDetails)
+        {
+            dgBookingDetails.ItemsSource = bookingDetails;
         }
     }
-} 
+}

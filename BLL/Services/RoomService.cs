@@ -1,6 +1,7 @@
 using DAL.Entities;
-using DAL.Repository;
+using DAL.Repositories;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace BLL.Services
 {
@@ -8,26 +9,39 @@ namespace BLL.Services
     {
         private readonly IRoomRepository _roomRepository;
 
-        public RoomService() : this(new RoomRepository(new FuminiHotelManagementContext()))
-        {
-        }
-
         public RoomService(IRoomRepository roomRepository)
         {
             _roomRepository = roomRepository;
         }
 
-        public IEnumerable<RoomInformation> GetAllRooms() => _roomRepository.GetAllRooms();
+        public List<RoomInformation> GetAllRooms()
+        {
+            return _roomRepository.GetAllWithRoomType().ToList();
+        }
 
-        public RoomInformation GetRoomById(int id) => _roomRepository.GetById(id);
+        public List<RoomInformation> SearchRooms(string keyword)
+        {
+            return _roomRepository.Search(keyword).ToList();
+        }
 
-        public void AddRoom(RoomInformation room) => _roomRepository.Add(room);
+        public void AddRoom(RoomInformation room)
+        {
+            _roomRepository.Add(room);
+        }
 
-        public void UpdateRoom(RoomInformation room) => _roomRepository.Update(room);
+        public void UpdateRoom(RoomInformation room)
+        {
+            _roomRepository.Update(room);
+        }
 
-        public void DeleteRoom(int id) => _roomRepository.Delete(id);
+        public void DeleteRoom(int roomId)
+        {
+            _roomRepository.Delete(roomId);
+        }
 
-        public IEnumerable<RoomInformation> SearchRooms(string keyword) => _roomRepository.Search(keyword);
-
+        public List<RoomType> GetRoomTypes()
+        {
+            return _roomRepository.GetRoomTypes().ToList();
+        }
     }
-} 
+}

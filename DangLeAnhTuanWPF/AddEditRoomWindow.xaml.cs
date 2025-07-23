@@ -1,6 +1,6 @@
+using BLL.Services;
 using DAL.Entities;
 using System.Collections.Generic;
-using System.Linq;
 using System.Windows;
 
 namespace DangLeAnhTuanWPF
@@ -8,25 +8,28 @@ namespace DangLeAnhTuanWPF
     public partial class AddEditRoomWindow : Window
     {
         public RoomInformation Room { get; private set; }
-        private List<RoomType> _roomTypes;
+        private readonly IRoomService _roomService;
+        private readonly List<RoomType> _roomTypes;
 
-        public AddEditRoomWindow(RoomInformation room = null)
+        public AddEditRoomWindow(IRoomService roomService)
         {
             InitializeComponent();
-            var context = new FuminiHotelManagementContext();
-            _roomTypes = context.RoomTypes.ToList();
+            _roomService = roomService;
+            _roomTypes = _roomService.GetRoomTypes();
             cbRoomType.ItemsSource = _roomTypes;
+            cbRoomType.DisplayMemberPath = "RoomTypeName";
+            cbRoomType.SelectedValuePath = "RoomTypeId";
+        }
 
-            if (room != null)
-            {
-                txtRoomNumber.Text = room.RoomNumber;
-                txtDescription.Text = room.RoomDetailDescription;
-                txtMaxCapacity.Text = room.RoomMaxCapacity?.ToString();
-                cbRoomType.SelectedValue = room.RoomTypeId;
-                txtStatus.Text = room.RoomStatus?.ToString();
-                txtPrice.Text = room.RoomPricePerDay?.ToString();
-                Room = room;
-            }
+        public void Initialize(RoomInformation room)
+        {
+            Room = room;
+            txtRoomNumber.Text = room.RoomNumber;
+            txtDescription.Text = room.RoomDetailDescription;
+            txtMaxCapacity.Text = room.RoomMaxCapacity?.ToString();
+            cbRoomType.SelectedValue = room.RoomTypeId;
+            txtStatus.Text = room.RoomStatus?.ToString();
+            txtPrice.Text = room.RoomPricePerDay?.ToString();
         }
 
         private void Ok_Click(object sender, RoutedEventArgs e)
@@ -52,11 +55,13 @@ namespace DangLeAnhTuanWPF
             Room.RoomPricePerDay = decimal.TryParse(txtPrice.Text, out var price) ? price : 0;
 
             DialogResult = true;
+            Close();
         }
 
         private void Cancel_Click(object sender, RoutedEventArgs e)
         {
             DialogResult = false;
+            Close();
         }
     }
-} 
+}

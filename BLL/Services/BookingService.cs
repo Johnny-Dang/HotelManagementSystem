@@ -1,6 +1,6 @@
 using DAL.Entities;
-using DAL.Repository;
-using Microsoft.EntityFrameworkCore;
+using DAL.Repositories;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -10,43 +10,54 @@ namespace BLL.Services
     {
         private readonly IBookingRepository _bookingRepository;
 
-        public BookingService() : this(new BookingRepository(new FuminiHotelManagementContext()))
-        {
-        }
-
         public BookingService(IBookingRepository bookingRepository)
         {
             _bookingRepository = bookingRepository;
         }
 
-        public IEnumerable<BookingReservation> GetAllBookingsWithDetails() => _bookingRepository.GetAllWithDetails();
-
-        public BookingReservation AddAndReturn(BookingReservation reservation) => _bookingRepository.AddAndReturn(reservation);
-
-        public void Update(BookingReservation reservation) => _bookingRepository.Update(reservation);
-
-        public void AddDetail(BookingDetail detail) => _bookingRepository.AddDetail(detail);
-
-        public void UpdateDetail(BookingDetail detail) => _bookingRepository.UpdateDetail(detail);
-
-        public void DeleteDetail(BookingDetail detail) => _bookingRepository.DeleteDetail(detail);
+        public List<BookingReservation> GetBookingHistory(int customerId)
+        {
+            return _bookingRepository.GetByCustomerId(customerId).ToList();
+        }
 
         public void SaveBooking(BookingReservation reservation, List<BookingDetail> details)
         {
-            // Assign the next BookingReservationId
-            reservation.BookingReservationId = _bookingRepository.GetNextBookingReservationId();
+            _bookingRepository.Add(reservation, details);
 
-            // Assign BookingReservationId to all BookingDetails
-            foreach (var detail in details)
+            // Cập nhật RoomStatus = 0 cho các phòng vừa đặt
+            using (var context = new DAL.Entities.FuminiHotelManagementContext())
             {
-                detail.BookingReservationId = reservation.BookingReservationId;
+                foreach (var detail in details)
+                {
+                    var room = context.RoomInformations.FirstOrDefault(r => r.RoomId == detail.RoomId);
+                    if (room != null)
+                    {
+                        room.RoomStatus = 0;
+                    }
+                }
+                context.SaveChanges();
             }
+        }
 
-            // Save BookingReservation to database
-            _bookingRepository.AddBookingReservation(reservation);
+        public List<BookingReservation> GetAllBookingsWithDetails()
+        {
+            return _bookingRepository.GetAllWithDetails().ToList();
+        }
 
-            // Save BookingDetails to database
-            _bookingRepository.AddBookingDetails(details);
+        public List<(string RoomNumber, int TotalBookings, decimal TotalRevenue)> GenerateBookingReport(DateOnly startDate, DateOnly endDate)
+        {
+            var report = _bookingRepository.GetAllWithDetails()
+                .SelectMany(b => b.BookingDetails)
+                .Where(d => d.StartDate >= startDate && d.EndDate <= endDate)
+                .GroupBy(d => d.Room.RoomNumber)
+                .Select(g => (
+                    RoomNumber: g.Key,
+                    TotalBookings: g.Count(),
+                    TotalRevenue: g.Sum(d => d.ActualPrice ?? 0)
+                ))
+                .ToList();
+
+            return report;
         }
     }
-} 
+}

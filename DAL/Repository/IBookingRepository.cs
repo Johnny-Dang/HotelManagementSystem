@@ -1,20 +1,13 @@
 using DAL.Entities;
+using System;
 using System.Collections.Generic;
 
-namespace DAL.Repository
+namespace DAL.Repositories
 {
     public interface IBookingRepository
     {
+        IEnumerable<BookingReservation> GetByCustomerId(int customerId);
+        void Add(BookingReservation reservation, List<BookingDetail> details);
         IEnumerable<BookingReservation> GetAllWithDetails();
-        BookingReservation AddAndReturn(BookingReservation reservation);
-        void Update(BookingReservation reservation);
-        void SaveBooking(BookingReservation reservation, IEnumerable<BookingDetail> details);
-        void UpdateDetail(BookingDetail detail);
-        void DeleteDetail(BookingDetail detail);
-        void AddDetail(BookingDetail detail);
-
-        int GetNextBookingReservationId();
-        void AddBookingReservation(BookingReservation reservation);
-        void AddBookingDetails(List<BookingDetail> details);
     }
-} 
+}

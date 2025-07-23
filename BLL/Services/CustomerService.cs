@@ -1,6 +1,7 @@
 using DAL.Entities;
-using DAL.Repository;
+using DAL.Repositories;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace BLL.Services
 {
@@ -8,25 +9,48 @@ namespace BLL.Services
     {
         private readonly ICustomerRepository _customerRepository;
 
-        public CustomerService() : this(new CustomerRepository(new FuminiHotelManagementContext()))
-        {
-        }
-
         public CustomerService(ICustomerRepository customerRepository)
         {
             _customerRepository = customerRepository;
         }
 
-        public IEnumerable<Customer> GetAllCustomers() => _customerRepository.GetAll();
+        public List<Customer> GetAllCustomers()
+        {
+            return _customerRepository.GetAll().ToList();
+        }
 
-        public Customer GetCustomerById(int id) => _customerRepository.GetById(id);
+        public List<Customer> SearchCustomers(string keyword)
+        {
+            return _customerRepository.GetAll()
+                .Where(c => c.CustomerFullName.Contains(keyword, StringComparison.OrdinalIgnoreCase) ||
+                            c.EmailAddress.Contains(keyword, StringComparison.OrdinalIgnoreCase))
+                .ToList();
+        }
 
-        public void AddCustomer(Customer customer) => _customerRepository.Add(customer);
+        public void AddCustomer(Customer customer)
+        {
+            _customerRepository.Add(customer);
+        }
 
-        public void UpdateCustomer(Customer customer) => _customerRepository.Update(customer);
+        public void UpdateCustomer(Customer customer)
+        {
+            _customerRepository.Update(customer);
+        }
 
-        public void DeleteCustomer(int id) => _customerRepository.Delete(id);
+        public void DeleteCustomer(int customerId)
+        {
+            _customerRepository.Delete(customerId);
+        }
 
-        public IEnumerable<Customer> SearchCustomers(string keyword) => _customerRepository.Search(keyword);
+        public void Update(Customer customer)
+        {
+            _customerRepository.Update(customer);
+        }
+
+        public bool IsEmailTaken(string email, int? existingCustomerId = null)
+        {
+            var existing = _customerRepository.GetByEmail(email);
+            return existing != null && (existingCustomerId == null || existing.CustomerId != existingCustomerId);
+        }
     }
-} 
+}

@@ -1,4 +1,9 @@
 using BLL.Services;
+using DAL.Entities;
+using Microsoft.Extensions.DependencyInjection;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 
@@ -6,17 +11,21 @@ namespace DangLeAnhTuanWPF
 {
     public partial class AdminWindow : Window
     {
-        private RoomService _roomService = new RoomService();
-        private CustomerService _customerService = new CustomerService();
-        private BookingService _bookingService = new BookingService();
+        private readonly IRoomService _roomService;
+        private readonly ICustomerService _customerService;
+        private readonly IBookingService _bookingService;
+        private readonly IServiceProvider _serviceProvider;
+        private Customer _selectedCustomer;
+        private RoomInformation _selectedRoom;
+        private BookingReservation _selectedBooking;
 
-        private DAL.Entities.Customer _selectedCustomer;
-        private DAL.Entities.RoomInformation _selectedRoom;
-        private DAL.Entities.BookingReservation _selectedBooking;
-
-        public AdminWindow()
+        public AdminWindow(IRoomService roomService, ICustomerService customerService, IBookingService bookingService, IServiceProvider serviceProvider)
         {
             InitializeComponent();
+            _roomService = roomService;
+            _customerService = customerService;
+            _bookingService = bookingService;
+            _serviceProvider = serviceProvider;
             LoadCustomers();
             LoadRooms();
             LoadBookings();
@@ -39,29 +48,26 @@ namespace DangLeAnhTuanWPF
 
         private void TabControl_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            if (e.Source is TabControl tabControl)
+            if (e.Source is TabControl tabControl && tabControl.SelectedItem is TabItem tabItem)
             {
-                if (tabControl.SelectedItem is TabItem tabItem)
+                switch (tabItem.Header.ToString())
                 {
-                    if (tabItem.Header.ToString() == "Room Management")
-                    {
+                    case "Room Management":
                         LoadRooms();
-                    }
-                    else if (tabItem.Header.ToString() == "Customer Management")
-                    {
+                        break;
+                    case "Customer Management":
                         LoadCustomers();
-                    }
-                    else if (tabItem.Header.ToString() == "Booking Management")
-                    {
+                        break;
+                    case "Booking Management":
                         LoadBookings();
-                    }
+                        break;
                 }
             }
         }
 
         private void AddCustomer_Click(object sender, RoutedEventArgs e)
         {
-            var addWindow = new AddEditCustomerWindow();
+            var addWindow = _serviceProvider.GetService<AddEditCustomerWindow>();
             if (addWindow.ShowDialog() == true)
             {
                 _customerService.AddCustomer(addWindow.Customer);
@@ -71,19 +77,20 @@ namespace DangLeAnhTuanWPF
 
         private void dgCustomers_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            _selectedCustomer = dgCustomers.SelectedItem as DAL.Entities.Customer;
+            _selectedCustomer = dgCustomers.SelectedItem as Customer;
         }
 
         private void dgRooms_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            _selectedRoom = dgRooms.SelectedItem as DAL.Entities.RoomInformation;
+            _selectedRoom = dgRooms.SelectedItem as RoomInformation;
         }
 
         private void EditCustomer_Click(object sender, RoutedEventArgs e)
         {
             if (_selectedCustomer != null)
             {
-                var editWindow = new AddEditCustomerWindow(_selectedCustomer);
+                var editWindow = _serviceProvider.GetService<AddEditCustomerWindow>();
+                editWindow.Initialize(_selectedCustomer);
                 if (editWindow.ShowDialog() == true)
                 {
                     _customerService.UpdateCustomer(editWindow.Customer);
@@ -102,8 +109,15 @@ namespace DangLeAnhTuanWPF
             {
                 if (MessageBox.Show($"Bạn có chắc muốn xóa khách hàng '{_selectedCustomer.CustomerFullName}'?", "Xác nhận", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
                 {
-                    _customerService.DeleteCustomer(_selectedCustomer.CustomerId);
-                    LoadCustomers();
+                    try
+                    {
+                        _customerService.DeleteCustomer(_selectedCustomer.CustomerId);
+                        LoadCustomers();
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show($"Lỗi: {ex.Message}", "Lỗi", MessageBoxButton.OK, MessageBoxImage.Error);
+                    }
                 }
             }
             else
@@ -115,15 +129,14 @@ namespace DangLeAnhTuanWPF
         private void SearchCustomer_Click(object sender, RoutedEventArgs e)
         {
             var keyword = txtCustomerSearch.Text.Trim();
-            if (string.IsNullOrEmpty(keyword))
-                LoadCustomers();
-            else
-                dgCustomers.ItemsSource = _customerService.SearchCustomers(keyword);
+            dgCustomers.ItemsSource = string.IsNullOrEmpty(keyword)
+                ? _customerService.GetAllCustomers()
+                : _customerService.SearchCustomers(keyword);
         }
 
         private void AddRoom_Click(object sender, RoutedEventArgs e)
         {
-            var addWindow = new AddEditRoomWindow();
+            var addWindow = _serviceProvider.GetService<AddEditRoomWindow>();
             if (addWindow.ShowDialog() == true)
             {
                 _roomService.AddRoom(addWindow.Room);
@@ -135,7 +148,8 @@ namespace DangLeAnhTuanWPF
         {
             if (_selectedRoom != null)
             {
-                var editWindow = new AddEditRoomWindow(_selectedRoom);
+                var editWindow = _serviceProvider.GetService<AddEditRoomWindow>();
+                editWindow.Initialize(_selectedRoom);
                 if (editWindow.ShowDialog() == true)
                 {
                     _roomService.UpdateRoom(editWindow.Room);
@@ -154,8 +168,15 @@ namespace DangLeAnhTuanWPF
             {
                 if (MessageBox.Show($"Bạn có chắc muốn xóa phòng '{_selectedRoom.RoomNumber}'?", "Xác nhận", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
                 {
-                    _roomService.DeleteRoom(_selectedRoom.RoomId);
-                    LoadRooms();
+                    try
+                    {
+                        _roomService.DeleteRoom(_selectedRoom.RoomId);
+                        LoadRooms();
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show($"Lỗi: {ex.Message}", "Lỗi", MessageBoxButton.OK, MessageBoxImage.Error);
+                    }
                 }
             }
             else
@@ -167,23 +188,23 @@ namespace DangLeAnhTuanWPF
         private void SearchRoom_Click(object sender, RoutedEventArgs e)
         {
             var keyword = txtRoomSearch.Text.Trim();
-            if (string.IsNullOrEmpty(keyword))
-                LoadRooms();
-            else
-                dgRooms.ItemsSource = _roomService.SearchRooms(keyword);
+            dgRooms.ItemsSource = string.IsNullOrEmpty(keyword)
+                ? _roomService.GetAllRooms()
+                : _roomService.SearchRooms(keyword);
         }
 
         private void dgBookings_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            _selectedBooking = dgBookings.SelectedItem as DAL.Entities.BookingReservation;
+            _selectedBooking = dgBookings.SelectedItem as BookingReservation;
         }
 
         private void ViewBookingDetail_Click(object sender, RoutedEventArgs e)
         {
-            var booking = (sender as FrameworkElement)?.DataContext as DAL.Entities.BookingReservation;
-            if (booking != null && booking.BookingDetails != null)
+            var booking = (sender as FrameworkElement)?.DataContext as BookingReservation;
+            if (booking?.BookingDetails != null && booking.BookingDetails.Any())
             {
-                var detailWindow = new BookingDetailWindow(booking.BookingDetails);
+                var detailWindow = _serviceProvider.GetService<BookingDetailWindow>();
+                detailWindow.Initialize(booking.BookingDetails);
                 detailWindow.ShowDialog();
             }
             else
@@ -191,5 +212,35 @@ namespace DangLeAnhTuanWPF
                 MessageBox.Show("Không có thông tin chi tiết cho booking này!", "Thông báo", MessageBoxButton.OK, MessageBoxImage.Information);
             }
         }
+
+        private void GenerateReport_Click(object sender, RoutedEventArgs e)
+        {
+            if (!dpStartDate.SelectedDate.HasValue || !dpEndDate.SelectedDate.HasValue)
+            {
+                MessageBox.Show("Vui lòng chọn ngày bắt đầu và ngày kết thúc!", "Thông báo", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            var startDate = DateOnly.FromDateTime(dpStartDate.SelectedDate.Value);
+            var endDate = DateOnly.FromDateTime(dpEndDate.SelectedDate.Value);
+
+            if (startDate > endDate)
+            {
+                MessageBox.Show("Ngày kết thúc phải sau ngày bắt đầu!", "Thông báo", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            try
+            {
+                var report = _bookingService.GenerateBookingReport(startDate, endDate)
+                    .OrderByDescending(r => r.TotalRevenue)
+                    .ToList();
+                dgReport.ItemsSource = report.Select(r => new { r.RoomNumber, r.TotalBookings, r.TotalRevenue });
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Lỗi khi tạo báo cáo: {ex.Message}", "Lỗi", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
     }
-} 
+}

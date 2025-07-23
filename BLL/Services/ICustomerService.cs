@@ -5,11 +5,12 @@ namespace BLL.Services
 {
     public interface ICustomerService
     {
-        IEnumerable<Customer> GetAllCustomers();
-        Customer GetCustomerById(int id);
+        List<Customer> GetAllCustomers();
+        List<Customer> SearchCustomers(string keyword);
         void AddCustomer(Customer customer);
         void UpdateCustomer(Customer customer);
-        void DeleteCustomer(int id);
-        IEnumerable<Customer> SearchCustomers(string keyword);
+        void DeleteCustomer(int customerId);
+        void Update(Customer customer); // For CustomerWindow
+        bool IsEmailTaken(string email, int? existingCustomerId = null);
     }
-} 
+}
