@@ -200,5 +200,20 @@ namespace DangLeAnhTuanWPF
                 MessageBox.Show($"Error: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
+
+        private void ViewBookingDetail_Click(object sender, RoutedEventArgs e)
+        {
+            var booking = (sender as FrameworkElement)?.DataContext as BookingReservation;
+            if (booking?.BookingDetails != null && booking.BookingDetails.Any())
+            {
+                var detailWindow = _serviceProvider.GetService<BookingDetailWindow>();
+                detailWindow.Initialize(booking.BookingDetails, booking.BookingReservationId, null); // null vì customer không cần xác nhận
+                detailWindow.ShowDialog();
+            }
+            else
+            {
+                MessageBox.Show("Không có thông tin chi tiết cho booking này!", "Thông báo", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+        }
     }
 }

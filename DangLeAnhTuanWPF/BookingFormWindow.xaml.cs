@@ -43,10 +43,35 @@ namespace DangLeAnhTuanWPF
             StartDate = DateOnly.FromDateTime(StartDatePicker.SelectedDate.Value);
             EndDate = DateOnly.FromDateTime(EndDatePicker.SelectedDate.Value);
 
+            // Validation: StartDate phải cách ngày hiện tại ít nhất 1 ngày
+            if (StartDate <= DateOnly.FromDateTime(DateTime.Now))
+            {
+                MessageBox.Show("Start date must be at least 1 day after today.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
+
             if (StartDate >= EndDate)
             {
                 MessageBox.Show("End date must be after start date.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                 return;
+            }
+
+            if (Room != null)
+            {
+                if (Room.RoomStatus == 0)
+                {
+                    MessageBox.Show("This room is already reserved. Please choose another room.", "Room Unavailable", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+                else if (Room.RoomStatus == 1)
+                {
+                    MessageBox.Show("Room is available. Proceeding with booking!", "Room Available", MessageBoxButton.OK, MessageBoxImage.Information);
+                }
+                else if (Room.RoomStatus == 2)
+                {
+                    MessageBox.Show("Room is not available. Please choose another room.", "Room Unavailable", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
             }
 
             DialogResult = true;

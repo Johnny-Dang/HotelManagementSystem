@@ -13,6 +13,10 @@
                     <DataGridTextColumn Header="Actual Price" Binding="{Binding ActualPrice}"/>
                 </DataGrid.Columns>
             </DataGrid>
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,10,0,0">
+                <Button x:Name="btnConfirm" Content="Confirm" Height="30" Width="100" Margin="0,0,10,0" Click="btnConfirm_Click"/>
+                <Button x:Name="btnCancelled" Content="Cancelled" Height="30" Width="100" Click="btnCancelled_Click"/>
+            </StackPanel>
         </StackPanel>
     </Grid>
 </Window>

@@ -59,5 +59,41 @@ namespace BLL.Services
 
             return report;
         }
+
+        public void UpdateBookingStatus(int bookingReservationId, byte status)
+        {
+            _bookingRepository.UpdateBookingStatus(bookingReservationId, status);
+        }
+
+        public void UpdateBookingStatusAndRoom(int bookingReservationId, byte status)
+        {
+            _bookingRepository.UpdateBookingStatus(bookingReservationId, status);
+            if (status == 3) // Completed
+            {
+                using (var context = new DAL.Entities.FuminiHotelManagementContext())
+                {
+                    var details = context.BookingDetails.Where(bd => bd.BookingReservationId == bookingReservationId).ToList();
+                    foreach (var detail in details)
+                    {
+                        var room = context.RoomInformations.FirstOrDefault(r => r.RoomId == detail.RoomId);
+                        if (room != null)
+                        {
+                            room.RoomStatus = 1; // Available
+                        }
+                    }
+                    context.SaveChanges();
+                }
+            }
+        }
+
+        public List<BookingDetail> GetBookingDetailsByReservationId(int bookingReservationId)
+        {
+            return _bookingRepository.GetBookingDetailsByReservationId(bookingReservationId).ToList();
+        }
+
+        public bool HasBookingDetailWithRoom(int roomId)
+        {
+            return _bookingRepository.HasBookingDetailWithRoom(roomId);
+        }
     }
 }

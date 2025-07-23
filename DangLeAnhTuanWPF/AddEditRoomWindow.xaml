@@ -30,7 +30,10 @@
         <ComboBox x:Name="cbRoomType" Grid.Row="3" Grid.Column="1" Margin="5" DisplayMemberPath="RoomTypeName" SelectedValuePath="RoomTypeId"/>
 
         <TextBlock Text="Status:" Grid.Row="4" Grid.Column="0" VerticalAlignment="Center"/>
-        <TextBox x:Name="txtStatus" Grid.Row="4" Grid.Column="1" Margin="5"/>
+        <ComboBox x:Name="cbStatus" Grid.Row="4" Grid.Column="1" Margin="5">
+            <ComboBoxItem Content="Available" Tag="1" />
+            <ComboBoxItem Content="Unavailable" Tag="2" />
+        </ComboBox>
 
         <TextBlock Text="Price/Day:" Grid.Row="5" Grid.Column="0" VerticalAlignment="Center"/>
         <TextBox x:Name="txtPrice" Grid.Row="5" Grid.Column="1" Margin="5"/>

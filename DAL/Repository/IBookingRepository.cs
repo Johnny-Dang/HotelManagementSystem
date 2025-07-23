@@ -9,5 +9,8 @@ namespace DAL.Repositories
         IEnumerable<BookingReservation> GetByCustomerId(int customerId);
         void Add(BookingReservation reservation, List<BookingDetail> details);
         IEnumerable<BookingReservation> GetAllWithDetails();
+        void UpdateBookingStatus(int bookingReservationId, byte status);
+        IEnumerable<BookingDetail> GetBookingDetailsByReservationId(int bookingReservationId);
+        bool HasBookingDetailWithRoom(int roomId);
     }
 }

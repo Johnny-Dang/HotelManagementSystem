@@ -39,8 +39,17 @@ namespace DAL.Repositories
 
         public void Update(Customer customer)
         {
-            _context.Customers.Update(customer);
-            _context.SaveChanges();
+            var existing = _context.Customers.Find(customer.CustomerId);
+            if (existing != null)
+            {
+                existing.CustomerFullName = customer.CustomerFullName;
+                existing.Telephone = customer.Telephone;
+                existing.EmailAddress = customer.EmailAddress;
+                existing.CustomerBirthday = customer.CustomerBirthday;
+                existing.CustomerStatus = customer.CustomerStatus;
+                existing.Password = customer.Password;
+                _context.SaveChanges();
+            }
         }
 
         public void Delete(int customerId)

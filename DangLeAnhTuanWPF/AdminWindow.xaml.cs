@@ -166,6 +166,12 @@ namespace DangLeAnhTuanWPF
         {
             if (_selectedRoom != null)
             {
+                // Kiểm tra phòng có trong BookingDetail không
+                if (_bookingService.HasBookingDetailWithRoom(_selectedRoom.RoomId))
+                {
+                    MessageBox.Show($"Phòng '{_selectedRoom.RoomNumber}' đã từng được đặt, không thể xóa!", "Thông báo", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
                 if (MessageBox.Show($"Bạn có chắc muốn xóa phòng '{_selectedRoom.RoomNumber}'?", "Xác nhận", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
                 {
                     try
@@ -204,8 +210,11 @@ namespace DangLeAnhTuanWPF
             if (booking?.BookingDetails != null && booking.BookingDetails.Any())
             {
                 var detailWindow = _serviceProvider.GetService<BookingDetailWindow>();
-                detailWindow.Initialize(booking.BookingDetails);
-                detailWindow.ShowDialog();
+                detailWindow.Initialize(booking.BookingDetails, booking.BookingReservationId, _bookingService, booking.BookingStatus.Value); // truyền thêm BookingStatus
+                if (detailWindow.ShowDialog() == true)
+                {
+                    LoadBookings();
+                }
             }
             else
             {
@@ -240,6 +249,41 @@ namespace DangLeAnhTuanWPF
             catch (Exception ex)
             {
                 MessageBox.Show($"Lỗi khi tạo báo cáo: {ex.Message}", "Lỗi", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private void SetCancelled_Click(object sender, RoutedEventArgs e)
+        {
+            var booking = (sender as FrameworkElement)?.DataContext as BookingReservation;
+            if (booking == null) return;
+            if (booking.BookingStatus == 2)
+            {
+                MessageBox.Show("Booking đã ở trạng thái Cancelled!", "Thông báo", MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
+            if (MessageBox.Show($"Bạn có chắc muốn hủy booking ID {booking.BookingReservationId}?", "Xác nhận", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
+            {
+                _bookingService.UpdateBookingStatus(booking.BookingReservationId, 2);
+                LoadBookings();
+                MessageBox.Show("Đã cập nhật trạng thái Cancelled!", "Thành công", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+        }
+
+        private void SetCompleted_Click(object sender, RoutedEventArgs e)
+        {
+            var booking = (sender as FrameworkElement)?.DataContext as BookingReservation;
+            if (booking == null) return;
+            if (booking.BookingStatus == 3)
+            {
+                MessageBox.Show("Booking đã ở trạng thái Completed!", "Thông báo", MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
+            if (MessageBox.Show($"Bạn có chắc muốn hoàn thành booking ID {booking.BookingReservationId}?", "Xác nhận", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
+            {
+                _bookingService.UpdateBookingStatusAndRoom(booking.BookingReservationId, 3);
+                LoadBookings();
+                LoadRooms(); // cập nhật lại UI RoomManagement
+                MessageBox.Show("Đã cập nhật trạng thái Completed và phòng đã được mở lại!", "Thành công", MessageBoxButton.OK, MessageBoxImage.Information);
             }
         }
     }

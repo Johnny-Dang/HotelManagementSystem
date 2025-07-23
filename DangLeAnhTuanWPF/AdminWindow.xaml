@@ -46,7 +46,30 @@
                             <DataGridTextColumn Header="Description" Binding="{Binding RoomDetailDescription}"/>
                             <DataGridTextColumn Header="Max Capacity" Binding="{Binding RoomMaxCapacity}"/>
                             <DataGridTextColumn Header="Room Type" Binding="{Binding RoomType.RoomTypeName}"/>
-                            <DataGridTextColumn Header="Status" Binding="{Binding RoomStatus}"/>
+                            <DataGridTemplateColumn Header="Status">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBlock>
+                                            <TextBlock.Style>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="Text" Value="Unknown"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding RoomStatus}" Value="0">
+                                                            <Setter Property="Text" Value="Reserved"/>
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding RoomStatus}" Value="1">
+                                                            <Setter Property="Text" Value="Available"/>
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding RoomStatus}" Value="2">
+                                                            <Setter Property="Text" Value="Unavailable"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBlock.Style>
+                                        </TextBlock>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
                             <DataGridTextColumn Header="Price/Day" Binding="{Binding RoomPricePerDay}"/>
                         </DataGrid.Columns>
                     </DataGrid>
@@ -61,11 +84,45 @@
                             <DataGridTextColumn Header="Booking Date" Binding="{Binding BookingDate}"/>
                             <DataGridTextColumn Header="Total Price" Binding="{Binding TotalPrice}"/>
                             <DataGridTextColumn Header="Customer Name" Binding="{Binding Customer.CustomerFullName}"/>
-                            <DataGridTextColumn Header="Status" Binding="{Binding BookingStatus}"/>
-                            <DataGridTemplateColumn Header="Chi tiết">
+                            <DataGridTextColumn Header="Telephone" Binding="{Binding Customer.Telephone}"/>
+                            <DataGridTemplateColumn Header="Status">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
-                                        <Button Content="Xem chi tiết" Click="ViewBookingDetail_Click"/>
+                                        <TextBlock>
+                                            <TextBlock.Style>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="Text" Value="Unknown"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding BookingStatus}" Value="0">
+                                                            <Setter Property="Text" Value="Pending"/>
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding BookingStatus}" Value="1">
+                                                            <Setter Property="Text" Value="Confirmed"/>
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding BookingStatus}" Value="2">
+                                                            <Setter Property="Text" Value="Cancelled"/>
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding BookingStatus}" Value="3">
+                                                            <Setter Property="Text" Value="Completed"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBlock.Style>
+                                        </TextBlock>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            <DataGridTemplateColumn Header="Detail">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Button Content="Detail" Click="ViewBookingDetail_Click"/>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            <DataGridTemplateColumn Header="Set Completed">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Button Content="Set Completed" Click="SetCompleted_Click" />
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>

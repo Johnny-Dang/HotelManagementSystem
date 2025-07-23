@@ -11,7 +11,27 @@
                 <DataGridTextColumn Header="Description" Binding="{Binding RoomDetailDescription}" />
                 <DataGridTextColumn Header="Max Capacity" Binding="{Binding RoomMaxCapacity}" />
                 <DataGridTextColumn Header="Room Type" Binding="{Binding RoomType.RoomTypeName}" />
-                <DataGridTextColumn Header="Status" Binding="{Binding RoomStatus}" />
+                <DataGridTemplateColumn Header="Status">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <TextBlock>
+                                <TextBlock.Style>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="Text" Value="Unknown"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding RoomStatus}" Value="0">
+                                                <Setter Property="Text" Value="Available"/>
+                                            </DataTrigger>
+                                            <DataTrigger Binding="{Binding RoomStatus}" Value="1">
+                                                <Setter Property="Text" Value="Reserved"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </TextBlock.Style>
+                            </TextBlock>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
                 <DataGridTextColumn Header="Price/Day" Binding="{Binding RoomPricePerDay}" />
             </DataGrid.Columns>
         </DataGrid>
